@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Berkeley Little League Field Scheduler — Prototype v3</title>
+<style>
+ :root{--bg:#f7f3f4;--card:#fff;--text:#2b2024;--muted:#756a6e;--line:#e4d9dc;--accent:#6b1f33;--accent-dark:#4e1424;--accent2:#f3e7ea;--gold:#c8a548;--gold-soft:#fbf5e3;--danger:#a92727;--warn:#9a6410;--shadow:0 8px 30px rgba(75,26,39,.10)}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:white;padding:18px 22px;display:flex;gap:18px;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:4;box-shadow:0 3px 12px rgba(0,0,0,.12)}
+.brand{font-weight:850;font-size:20px}.sub{font-size:12px;opacity:.82}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tab{border:1px solid rgba(255,255,255,.35);background:transparent;color:white;border-radius:999px;padding:9px 14px;font-weight:750;cursor:pointer}.tab.active{background:var(--gold);color:#2d1b0a;border-color:var(--gold)}
+main{max-width:1550px;margin:auto;padding:22px}.toolbar{display:flex;gap:12px;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap}.left,.right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:750;cursor:pointer;background:#e9edf1;color:#24313d}.btn.primary{background:var(--accent);color:#fff}.btn.outline{background:#fff;border:1px solid var(--line)}.btn.danger{background:#fee4e2;color:#912018}.btn.small{padding:6px 9px;font-size:12px}.btn.blue{background:var(--gold);color:#2d1b0a}
+.pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:13px}.legend{display:flex;gap:12px;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap}.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px}.approved{background:var(--accent)}.pending{background:var(--gold)}.closed{background:#667085}.game{background:var(--gold)}
+.card{background:var(--card);border:1px solid #e4e7ec;border-radius:14px;box-shadow:var(--shadow);overflow:hidden}.card h3{margin:0;padding:16px 18px;border-bottom:1px solid var(--line);font-size:16px}.schedule-wrap{overflow:auto}.schedule{min-width:1350px;display:grid;grid-template-columns:155px repeat(7,minmax(170px,1fr))}.cell{border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-height:160px;padding:8px;background:#fff}.head{min-height:auto;background:#f8fafb;font-weight:800;text-align:center;padding:12px 8px}.resource{font-weight:850;background:#fbfcfd;position:sticky;left:0;z-index:2}.resource small{display:block;color:var(--muted);font-weight:500;margin-top:3px}.event{border-radius:8px;padding:7px 8px;margin:4px 0;font-size:11px;color:white;line-height:1.25}.event.game{color:#2d1b0a}.event.approved{color:white}.event strong{display:block}.open-slot{border:1px dashed #c3cbd4;border-radius:7px;padding:5px 7px;margin:4px 0;font-size:10px;color:#667085;background:#fafbfc;cursor:pointer}.open-slot:hover{border-color:var(--gold);color:var(--accent-dark);background:var(--gold-soft)}.slot-compact{max-height:410px;overflow:auto;padding-right:2px}
+.grid2{display:grid;grid-template-columns:1.3fr .7fr;gap:18px}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:900px}.table th,.table td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:top}.table th{background:#f8fafb;color:#475467;font-size:12px;letter-spacing:.02em}.status{display:inline-flex;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800}.status.pending{background:var(--gold-soft);color:#7a5710}.status.approved{background:var(--accent2);color:var(--accent)}.status.denied{background:#fee4e2;color:#912018}.status.game{background:var(--gold-soft);color:#6e4b05}.status.travel{background:#f4e8ef;color:var(--accent)}.score{font-weight:900}.muted{color:var(--muted)}
+.panel{padding:16px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}.stat .n{font-weight:900;font-size:24px}.stat .l{font-size:12px;color:var(--muted);margin-top:3px}
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:20;align-items:center;justify-content:center;padding:16px}.modal{background:white;border-radius:16px;max-width:760px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 70px rgba(0,0,0,.28)}.modal h2{margin:0;padding:18px;border-bottom:1px solid var(--line)}.modal .body{padding:18px}.form{display:grid;grid-template-columns:1fr 1fr;gap:13px}.form .full{grid-column:1/-1}.field label{display:block;font-size:12px;font-weight:800;color:#475467;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;padding:10px 11px;border:1px solid #cfd6de;border-radius:8px;font:inherit;background:white}.field textarea{min-height:72px}.modal .foot{display:flex;justify-content:flex-end;gap:10px;padding:15px 18px;border-top:1px solid var(--line)}
+.notice{padding:12px;border-radius:10px;background:var(--accent2);color:var(--accent);font-size:13px;margin:0 0 14px}.warnbox{padding:12px;border-radius:10px;background:#fff6ed;color:#9a4a00;font-size:13px;margin:0 0 14px}.priority-box{background:#f8fafb;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:13px;line-height:1.55}.hidden{display:none!important}.importbox{border:1px dashed #9aa7b3;border-radius:12px;padding:16px;background:#fbfcfd}.importbox input{margin:10px 0}.preview{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:9px;margin-top:12px}.preview table{width:100%;border-collapse:collapse;font-size:11px}.preview th,.preview td{padding:7px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:left}.preview th{background:#f8fafb;position:sticky;top:0}.mapping{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.mapping label{font-size:11px;font-weight:700}.mapping select{width:100%;margin-top:3px;padding:7px;border:1px solid #cfd6de;border-radius:7px;background:white}.rolechips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.rolechip{background:var(--gold-soft);color:var(--accent-dark);border-radius:999px;padding:5px 9px;font-size:11px;font-weight:800}
+@media(max-width:950px){.grid2{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}header{align-items:flex-start;flex-direction:column}.form{grid-template-columns:1fr}.form .full{grid-column:auto}.mapping{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){main{padding:12px}.stats{grid-template-columns:1fr 1fr}.mapping{grid-template-columns:1fr}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<header>
+  <div><div class="brand">Berkeley Little League Field Scheduler</div><div class="sub">Prototype v3 • M1 • M2 Turf • M3 • Leiter • T-Ball • VCC</div></div>
+  <div class="tabs">
+    <button class="tab active" data-view="scheduleView">Public Schedule</button>
+    <button class="tab" data-view="coachView">Coach Portal</button>
+    <button class="tab" data-view="adminView">Administration</button>
+  </div>
+</header>
+<main>
+<section id="scheduleView">
+  <div class="toolbar">
+    <div class="left"><button class="btn outline" id="prevWeek">←</button><span class="pill" id="weekLabel"></span><button class="btn outline" id="nextWeek">→</button></div>
+    <div class="right"><div class="legend"><span><i class="dot game"></i>Game / locked</span><span><i class="dot approved"></i>Approved field time</span><span><i class="dot closed"></i>Closed</span></div><button class="btn primary requestBtn">Request Open Time</button></div>
+  </div>
+  <div class="card"><div class="schedule-wrap"><div class="schedule" id="scheduleGrid"></div></div></div>
+</section>
+
+<section id="coachView" class="hidden">
+  <div class="toolbar"><div><h2 style="margin:0">Coach Portal</h2><div class="muted">View availability, request Little League or travel-team time, and track approvals.</div></div><button class="btn primary requestBtn">+ New Request</button></div>
+  <div class="stats" style="margin-bottom:16px">
+    <div class="stat"><div class="n" id="coachPending">0</div><div class="l">Pending requests</div></div>
+    <div class="stat"><div class="n" id="coachApproved">0</div><div class="l">Approved requests</div></div>
+    <div class="stat"><div class="n" id="coachGames">0</div><div class="l">Imported games this week</div></div>
+    <div class="stat"><div class="n">LL first</div><div class="l">Travel requests follow all Little League obligations</div></div>
+  </div>
+  <div class="card"><h3>My Requests</h3><div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Time</th><th>Team</th><th>Team Type / Division</th><th>1st Choice</th><th>Status</th><th>Assigned</th></tr></thead><tbody id="coachRequests"></tbody></table></div></div>
+</section>
+
+<section id="adminView" class="hidden">
+  <div class="toolbar"><div><h2 style="margin:0">Administration Dashboard</h2><div class="muted">President, Scheduling Coordinator, Vice President, and any additional authorized users.</div><div class="rolechips"><span class="rolechip">President</span><span class="rolechip">Scheduling Coordinator</span><span class="rolechip">Vice President</span><span class="rolechip">Custom Admin Access</span></div></div><button class="btn primary requestBtn">+ Add Reservation</button></div>
+  <div class="stats" style="margin-bottom:16px">
+    <div class="stat"><div class="n" id="statPending">0</div><div class="l">Pending requests</div></div>
+    <div class="stat"><div class="n" id="statGames">0</div><div class="l">Imported games</div></div>
+    <div class="stat"><div class="n">6</div><div class="l">Bookable resources</div></div>
+    <div class="stat"><div class="n">4</div><div class="l">Default admin roles</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h3>Approval Queue</h3><div class="table-wrap"><table class="table"><thead><tr><th>Requested</th><th>Team / Coach</th><th>Time</th><th>Preferences</th><th>Scheduling priority</th><th>Tie-break details</th><th>Decision</th></tr></thead><tbody id="adminQueue"></tbody></table></div></div>
+    <div class="card"><h3>Priority Rules</h3><div class="panel">
+      <div class="notice">The system recommends the correct order; an authorized administrator makes the final approval.</div>
+      <div class="priority-box">
+        <strong>For a requested field/time:</strong><br><br>
+        <strong>1.</strong> Little League obligations always have priority over travel-team requests.<br>
+        <strong>2.</strong> For Little League requests, the field's assigned division has first priority.<br>
+        <strong>3.</strong> Remaining Little League requests are ranked by coaching seniority, then coach last name A–Z.<br>
+        <strong>4.</strong> Travel teams are ranked by age, oldest first: 13U → 12U → 11U → 10U → 9U → 8U → 7U, etc.<br>
+        <strong>5.</strong> Travel teams of the same age are ranked by coaching seniority, then coach last name A–Z.<br><br>
+        <strong>Home fields</strong><br>
+        M1 → Minors<br>
+        M2 (Turf) → Majors<br>
+        M3 → Farm<br>
+        T-Ball → T-Ball<br>
+        Leiter → Juniors<br>
+        VCC → no division priority
+      </div>
+    </div></div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3>SportsConnect Game Schedule Import</h3>
+    <div class="panel">
+      <div class="notice"><strong>Recommended workflow:</strong> Export the game schedule from SportsConnect, upload the Excel/CSV file here, preview it, map the columns once, then import. Imported games become locked reservations.</div>
+      <div class="importbox">
+        <strong>1. Choose SportsConnect export</strong><br>
+        <span class="muted">Accepted in this prototype: .xlsx, .xls, or .csv. Excel parsing uses the included browser library when internet access is available; CSV works without it.</span><br>
+        <input type="file" id="scheduleFile" accept=".xlsx,.xls,.csv,text/csv" />
+        <div id="importStatus" class="muted">No file selected.</div>
+        <div id="mappingArea" class="hidden">
+          <div class="mapping" id="mappingGrid"></div>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn blue" id="importGamesBtn">Import Games</button><button class="btn outline" id="clearImportBtn">Clear Preview</button></div>
+        </div>
+        <div id="previewArea" class="preview hidden"></div>
+      </div>
+      <div class="warnbox" style="margin-top:14px;margin-bottom:0"><strong>Best next step:</strong> when you have an actual SportsConnect export, upload it here in ChatGPT too. I can map its exact column names so the production app becomes a true one-click import.</div>
+    </div>
+  </div>
+</section>
+</main>
+
+<div class="modal-backdrop" id="requestModal">
+  <div class="modal">
+    <h2>Request Field / VCC Time</h2>
+    <div class="body">
+      <div class="notice">Submitting does not reserve the resource. An authorized administrator must approve it. Little League obligations have priority over travel requests, and imported games are locked.</div>
+      <form id="requestForm" class="form">
+        <div class="field"><label>Team Name</label><input id="team" value="Sample Team" required></div>
+        <div class="field"><label>Team Type</label><select id="teamType"><option value="Little League" selected>Little League</option><option value="Travel">Travel</option></select></div>
+        <div class="field" id="divisionField"><label>Little League Division</label><select id="division"><option>Majors</option><option selected>Minors</option><option>Farm</option><option>T-Ball</option><option>Juniors</option><option>Other / League Event</option></select></div>
+        <div class="field hidden" id="travelAgeField"><label>Travel Age</label><select id="travelAge"><option value="13">13U</option><option value="12">12U</option><option value="11">11U</option><option value="10" selected>10U</option><option value="9">9U</option><option value="8">8U</option><option value="7">7U</option><option value="6">6U</option><option value="5">5U</option></select></div>
+        <div class="field"><label>Coach First Name</label><input id="coachFirst" value="Dan" required></div>
+        <div class="field"><label>Coach Last Name</label><input id="coachLast" value="Ceparano" required></div>
+        <div class="field"><label>Years Coaching</label><input id="years" type="number" min="0" max="50" value="4" required></div>
+        <div class="field"><label>Request Type</label><select id="type"><option>Practice</option><option>Makeup Game</option><option>Clinic / League Event</option><option>Meeting / VCC</option></select></div>
+        <div class="field"><label>Date</label><input id="date" type="date" required></div>
+        <div class="field"><label>Time</label><select id="time"></select></div>
+        <div class="field"><label>1st Preference</label><select id="pref1"></select></div>
+        <div class="field"><label>2nd Preference</label><select id="pref2"></select></div>
+        <div class="field"><label>3rd Preference</label><select id="pref3"></select></div>
+        <div class="field full"><label>Notes</label><textarea id="notes" placeholder="Optional details"></textarea></div>
+      </form>
+    </div>
+    <div class="foot"><button class="btn outline" id="cancelModal">Cancel</button><button class="btn primary" id="submitRequest">Submit Request</button></div>
+  </div>
+</div>
+<script>
+const resources=[
+ {name:'M1',division:'Minors',label:'Minors home field'},
+ {name:'M2 (Turf)',division:'Majors',label:'Majors home field'},
+ {name:'M3',division:'Farm',label:'Farm home field'},
+ {name:'Leiter',division:'Juniors',label:'Juniors home field'},
+ {name:'T-Ball',division:'T-Ball',label:'T-Ball home field'},
+ {name:'VCC',division:null,label:'Multipurpose building'}
+];
+const weekdaySlots=['3:30 PM – 5:00 PM','5:00 PM – 6:30 PM','6:30 PM – 8:00 PM','8:00 PM – 9:30 PM'];
+const weekendSlots=[];
+for(let h=8;h<21;h++){const fmt=x=>{const ap=x>=12?'PM':'AM';let hh=x%12||12;return `${hh}:00 ${ap}`};weekendSlots.push(`${fmt(h)} – ${fmt(h+1)}`)}
+let weekStart=new Date('2026-10-05T12:00:00');
+const seedGames=[
+ {id:'g1',resource:'M2 (Turf)',date:'2026-10-06',title:'Majors: Yankees vs Mets',time:'6:30 PM – 8:00 PM',kind:'game',source:'SportsConnect'},
+ {id:'g2',resource:'M1',date:'2026-10-07',title:'Minors: Hawks vs Bears',time:'5:00 PM – 6:30 PM',kind:'game',source:'SportsConnect'},
+ {id:'g3',resource:'T-Ball',date:'2026-10-10',title:'T-Ball Game',time:'10:00 AM – 11:00 AM',kind:'game',source:'SportsConnect'},
+ {id:'g4',resource:'Leiter',date:'2026-10-11',title:'Juniors Game',time:'1:00 PM – 2:00 PM',kind:'game',source:'SportsConnect'}
+];
+let importedGames=JSON.parse(localStorage.getItem('ll_games_v3')||'null')||seedGames;
+let requests=JSON.parse(localStorage.getItem('ll_requests_v3')||'null')||[
+ {id:1,submitted:'Oct 1',team:'Falcons',teamType:'Little League',travelAge:null,division:'Majors',coachFirst:'Mike',coachLast:'Adams',years:6,date:'2026-10-08',time:'6:30 PM – 8:00 PM',pref1:'M2 (Turf)',pref2:'M1',pref3:'M3',status:'Pending',assigned:''},
+ {id:2,submitted:'Oct 1',team:'Tigers',teamType:'Little League',travelAge:null,division:'Minors',coachFirst:'John',coachLast:'Baker',years:8,date:'2026-10-08',time:'6:30 PM – 8:00 PM',pref1:'M2 (Turf)',pref2:'M1',pref3:'M3',status:'Pending',assigned:''},
+ {id:3,submitted:'Sep 30',team:'Raptors',teamType:'Little League',travelAge:null,division:'Farm',coachFirst:'Chris',coachLast:'Davis',years:3,date:'2026-10-09',time:'5:00 PM – 6:30 PM',pref1:'M3',pref2:'M1',pref3:'T-Ball',status:'Approved',assigned:'M3'},
+ {id:4,submitted:'Oct 2',team:'Maroon Select',teamType:'Travel',travelAge:12,division:'Travel',coachFirst:'Alex',coachLast:'Evans',years:5,date:'2026-10-08',time:'6:30 PM – 8:00 PM',pref1:'M2 (Turf)',pref2:'M1',pref3:'Leiter',status:'Pending',assigned:''}
+];
+function save(){localStorage.setItem('ll_requests_v3',JSON.stringify(requests));localStorage.setItem('ll_games_v3',JSON.stringify(importedGames));}
+function fmtDate(d){return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+function iso(d){return d.toISOString().slice(0,10)}
+function daySlots(dateStr){const d=new Date(dateStr+'T12:00:00');return [0,6].includes(d.getDay())?weekendSlots:weekdaySlots}
+function resourceObj(name){return resources.find(r=>r.name===name)}
+function isTravel(req){return req.teamType==='Travel'}
+function isLittleLeague(req){return !isTravel(req)}
+function isHomeDivision(req,field){const r=resourceObj(field);return isLittleLeague(req)&&!!(r&&r.division&&r.division===req.division)}
+function requestGroupLabel(req){return isTravel(req)?`Travel ${req.travelAge||'?'}U`:`Little League • ${req.division}`}
+function currentReservations(){return importedGames.concat(requests.filter(r=>r.status==='Approved').map(r=>({id:'r'+r.id,resource:r.assigned||r.pref1,date:r.date,title:`${requestGroupLabel(r)}: ${r.team}`,time:r.time,kind:'approved',source:'Approved request'})))}
+function overlapExact(e,date,time,resource){return e.date===date&&e.time===time&&e.resource===resource}
+function priorityCompareForField(a,b,field){
+ const aLL=isLittleLeague(a),bLL=isLittleLeague(b);
+ if(aLL!==bLL)return aLL?-1:1;
+ if(aLL&&bLL){
+   const ah=isHomeDivision(a,field),bh=isHomeDivision(b,field);
+   if(ah!==bh)return ah?-1:1;
+   if((a.years||0)!==(b.years||0))return (b.years||0)-(a.years||0);
+   return (a.coachLast||'').localeCompare(b.coachLast||'',undefined,{sensitivity:'base'});
+ }
+ const aa=Number(a.travelAge)||0,ba=Number(b.travelAge)||0;
+ if(aa!==ba)return ba-aa;
+ if((a.years||0)!==(b.years||0))return (b.years||0)-(a.years||0);
+ return (a.coachLast||'').localeCompare(b.coachLast||'',undefined,{sensitivity:'base'});
+}
+function priorityLabel(req,field){
+ if(isTravel(req))return `Travel ${req.travelAge||'?'}U — after all Little League obligations`;
+ const home=isHomeDivision(req,field);
+ return home?`Little League — ${req.division} home-field priority`:`Little League — ${resourceObj(field)?.division?resourceObj(field).division+' has home-field priority':'league priority'}`;
+}
+function fmtLocalDate(ds){return new Date(ds+'T12:00:00').toLocaleDateString()}
+function renderSchedule(){
+ const days=[...Array(7)].map((_,i)=>{let d=new Date(weekStart);d.setDate(d.getDate()+i);return d});
+ document.getElementById('weekLabel').textContent=`${fmtDate(days[0])} – ${fmtDate(days[6])}, ${days[6].getFullYear()}`;
+ let html='<div class="cell head">Resource</div>'+days.map(d=>`<div class="cell head">${d.toLocaleDateString('en-US',{weekday:'short'})}<br>${fmtDate(d)}</div>`).join('');
+ const res=currentReservations();
+ resources.forEach(r=>{
+   html+=`<div class="cell resource">${r.name}<small>${r.label}</small></div>`;
+   days.forEach(d=>{
+     const di=iso(d),slots=daySlots(di);let slotHtml='';
+     slots.forEach(slot=>{const ev=res.find(e=>overlapExact(e,di,slot,r.name));if(ev){slotHtml+=`<div class="event ${ev.kind}"><strong>${slot}</strong>${ev.title}</div>`}else{slotHtml+=`<div class="open-slot" data-date="${di}" data-resource="${r.name}" data-time="${slot}">${slot} • open</div>`}});
+     html+=`<div class="cell"><div class="slot-compact">${slotHtml}</div></div>`;
+   });
+ });
+ document.getElementById('scheduleGrid').innerHTML=html;
+ document.querySelectorAll('.open-slot').forEach(el=>el.onclick=()=>openModal(el.dataset.date,el.dataset.resource,el.dataset.time));
+ document.getElementById('coachGames').textContent=importedGames.filter(g=>days.some(d=>iso(d)===g.date)).length;
+}
+function recommendedOrder(req){
+ const field=req.pref1;
+ const peers=requests.filter(x=>x.status==='Pending'&&x.date===req.date&&x.time===req.time&&[x.pref1,x.pref2,x.pref3].includes(field)).slice().sort((a,b)=>priorityCompareForField(a,b,field));
+ return peers.findIndex(x=>x.id===req.id)+1;
+}
+function renderTables(){
+ const coach=document.getElementById('coachRequests');
+ coach.innerHTML=requests.map(r=>`<tr><td>${fmtLocalDate(r.date)}</td><td>${r.time}</td><td>${r.team}</td><td>${requestGroupLabel(r)}</td><td>${r.pref1}</td><td><span class="status ${r.status.toLowerCase()}">${r.status}</span></td><td>${r.assigned||'—'}</td></tr>`).join('');
+ document.getElementById('coachPending').textContent=requests.filter(r=>r.status==='Pending').length;
+ document.getElementById('coachApproved').textContent=requests.filter(r=>r.status==='Approved').length;
+ const queue=document.getElementById('adminQueue');
+ const pend=requests.filter(r=>r.status==='Pending').slice().sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)||a.pref1.localeCompare(b.pref1)||priorityCompareForField(a,b,a.pref1));
+ queue.innerHTML=pend.map(r=>{
+   const locked=importedGames.some(e=>overlapExact(e,r.date,r.time,r.pref1));const rank=recommendedOrder(r);
+   return `<tr><td>${r.submitted}</td><td><strong>${r.team}</strong> <span class="status ${isTravel(r)?'travel':'approved'}">${isTravel(r)?'Travel '+r.travelAge+'U':'Little League'}</span><br>${r.coachFirst} ${r.coachLast}</td><td>${fmtLocalDate(r.date)}<br><span class="muted">${r.time}</span></td><td><strong>${r.pref1}</strong><br><span class="muted">${r.pref2}, ${r.pref3}</span></td><td>${priorityLabel(r,r.pref1)}<br><span class="muted">Recommended order: #${rank}</span>${locked?'<br><span class="status game">Game conflict</span>':''}</td><td><strong>${isTravel(r)?((r.travelAge||'?')+'U travel'):(r.years+' years')}</strong><br><span class="muted">${isTravel(r)?(r.years+' coaching years • '):''}Tie: ${r.coachLast}</span></td><td><button class="btn small primary" onclick="approve('+r.id+')">Approve</button> <button class="btn small danger" onclick="deny('+r.id+')">Deny</button></td></tr>`
+ }).join('')||'<tr><td colspan="7" class="muted">No pending requests.</td></tr>';
+ document.getElementById('statPending').textContent=pend.length;document.getElementById('statGames').textContent=importedGames.length;
+}
+function chooseAvailableField(r){const all=currentReservations();return [r.pref1,r.pref2,r.pref3].find(p=>!all.some(e=>overlapExact(e,r.date,r.time,p)))}
+function higherPriorityPending(r,field){return requests.filter(x=>x.id!==r.id&&x.status==='Pending'&&x.date===r.date&&x.time===r.time&&[x.pref1,x.pref2,x.pref3].includes(field)&&priorityCompareForField(x,r,field)<0).sort((a,b)=>priorityCompareForField(a,b,field))}
+function approve(id){let r=requests.find(x=>x.id===id);if(!r)return;const chosen=chooseAvailableField(r);if(!chosen){alert('All three requested fields are already occupied at this exact time. Choose another time or deny/waitlist this request.');return}const higher=higherPriorityPending(r,chosen);if(higher.length){const top=higher[0];alert(`This request cannot be approved yet because a higher-priority request is still pending for ${chosen} at this time: ${top.team} (${requestGroupLabel(top)}). Review that request first.`);return}r.status='Approved';r.assigned=chosen;save();renderSchedule();renderTables();}
+function deny(id){let r=requests.find(x=>x.id===id);if(!r)return;r.status='Denied';save();renderTables();}
+function populateTime(dateStr,preferred){const sel=document.getElementById('time');const slots=daySlots(dateStr||iso(weekStart));sel.innerHTML=slots.map(s=>`<option ${s===preferred?'selected':''}>${s}</option>`).join('')}
+function openModal(date,resource,time){document.getElementById('requestModal').style.display='flex';const ds=date||iso(weekStart);document.getElementById('date').value=ds;populateTime(ds,time);if(resource)document.getElementById('pref1').value=resource;}
+function closeModal(){document.getElementById('requestModal').style.display='none'}
+resources.forEach((r,i)=>['pref1','pref2','pref3'].forEach(id=>document.getElementById(id).insertAdjacentHTML('beforeend',`<option ${((id==='pref1'&&i===0)||(id==='pref2'&&i===1)||(id==='pref3'&&i===2))?'selected':''}>${r.name}</option>`)));
+
+function syncTeamTypeFields(){const travel=document.getElementById('teamType').value==='Travel';document.getElementById('divisionField').classList.toggle('hidden',travel);document.getElementById('travelAgeField').classList.toggle('hidden',!travel)}
+document.getElementById('teamType').addEventListener('change',syncTeamTypeFields);syncTeamTypeFields();
+document.getElementById('date').addEventListener('change',e=>populateTime(e.target.value));
+document.querySelectorAll('.requestBtn').forEach(b=>b.onclick=()=>openModal());document.getElementById('cancelModal').onclick=closeModal;
+document.getElementById('submitRequest').onclick=()=>{
+ const team=document.getElementById('team').value.trim(),date=document.getElementById('date').value,coachFirst=document.getElementById('coachFirst').value.trim(),coachLast=document.getElementById('coachLast').value.trim();
+ if(!team||!date||!coachFirst||!coachLast){alert('Please complete team, date, and coach name.');return}
+ const p1=document.getElementById('pref1').value,p2=document.getElementById('pref2').value,p3=document.getElementById('pref3').value;if(new Set([p1,p2,p3]).size<3){alert('Please choose three different field preferences.');return}
+ const teamType=document.getElementById('teamType').value;const travelAge=teamType==='Travel'?Number(document.getElementById('travelAge').value):null;const division=teamType==='Travel'?'Travel':document.getElementById('division').value;requests.push({id:Date.now(),submitted:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}),team,teamType,travelAge,division,coachFirst,coachLast,years:Number(document.getElementById('years').value)||0,date,time:document.getElementById('time').value,pref1:p1,pref2:p2,pref3:p3,status:'Pending',assigned:''});save();closeModal();renderTables();alert('Request submitted as Pending.');
+};
+document.getElementById('prevWeek').onclick=()=>{weekStart.setDate(weekStart.getDate()-7);renderSchedule()};document.getElementById('nextWeek').onclick=()=>{weekStart.setDate(weekStart.getDate()+7);renderSchedule()};
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');['scheduleView','coachView','adminView'].forEach(id=>document.getElementById(id).classList.toggle('hidden',id!==t.dataset.view));renderTables()});
+
+// SportsConnect import prototype
+let importRows=[],importHeaders=[];
+const mapFields=[['date','Game Date'],['time','Game Time'],['field','Field'],['home','Home Team'],['away','Away Team'],['division','Division']];
+function normalize(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'')}
+function guessHeader(key){const variants={date:['date','gamedate','eventdate'],time:['time','gametime','starttime'],field:['field','location','fieldname','venue'],home:['hometeam','home','team1'],away:['awayteam','away','team2'],division:['division','league','program']};return importHeaders.find(h=>variants[key].some(v=>normalize(h)===v||normalize(h).includes(v)))||''}
+function renderMapping(){const g=document.getElementById('mappingGrid');g.innerHTML=mapFields.map(([k,l])=>`<label>${l}<select id="map_${k}"><option value="">— choose column —</option>${importHeaders.map(h=>`<option ${h===guessHeader(k)?'selected':''}>${h}</option>`).join('')}</select></label>`).join('');document.getElementById('mappingArea').classList.remove('hidden')}
+function renderPreview(){const area=document.getElementById('previewArea');const rows=importRows.slice(0,8);area.innerHTML=`<table><thead><tr>${importHeaders.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${importHeaders.map(h=>`<td>${r[h]??''}</td>`).join('')}</tr>`).join('')}</tbody></table>`;area.classList.remove('hidden')}
+function parseCSV(text){const lines=text.replace(/\r/g,'').split('\n').filter(Boolean);if(!lines.length)return[];const parseLine=line=>{let a=[],cur='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(q&&line[i+1]==='"'){cur+='"';i++}else q=!q}else if(c===','&&!q){a.push(cur);cur=''}else cur+=c}a.push(cur);return a};const headers=parseLine(lines[0]);return lines.slice(1).map(line=>{const vals=parseLine(line),o={};headers.forEach((h,i)=>o[h]=vals[i]??'');return o})}
+function setImportRows(rows,name){importRows=rows||[];importHeaders=importRows.length?Object.keys(importRows[0]):[];document.getElementById('importStatus').textContent=`${name}: ${importRows.length} rows found.`;if(importRows.length){renderMapping();renderPreview()}else{document.getElementById('mappingArea').classList.add('hidden');document.getElementById('previewArea').classList.add('hidden')}}
+document.getElementById('scheduleFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{if(f.name.toLowerCase().endsWith('.csv')){setImportRows(parseCSV(await f.text()),f.name)}else{if(typeof XLSX==='undefined'){alert('Excel parser did not load. Export as CSV or open this prototype while connected to the internet.');return}const data=await f.arrayBuffer();const wb=XLSX.read(data,{type:'array',cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];setImportRows(XLSX.utils.sheet_to_json(ws,{defval:''}),f.name)}}catch(err){document.getElementById('importStatus').textContent='Could not read file: '+err.message}});
+function excelDateToISO(v){if(v instanceof Date&&!isNaN(v))return v.toISOString().slice(0,10);if(typeof v==='number'&&typeof XLSX!=='undefined'){const d=XLSX.SSF.parse_date_code(v);if(d)return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`};const s=String(v||'').trim();const d=new Date(s);return isNaN(d)?'':d.toISOString().slice(0,10)}
+function normalizeField(v){const s=normalize(v);if(s==='m1'||s.includes('fieldm1'))return'M1';if(s==='m2'||s.includes('m2turf')||s.includes('turf'))return'M2 (Turf)';if(s==='m3')return'M3';if(s.includes('leiter'))return'Leiter';if(s.includes('tball'))return'T-Ball';if(s.includes('vcc'))return'VCC';return String(v||'').trim()}
+function normalizeTime(v,dateStr){if(v instanceof Date){let h=v.getHours(),m=v.getMinutes();return timeFromStart(h,m,dateStr)}const s=String(v||'').trim();const m=s.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);if(!m)return s;let h=Number(m[1]),min=Number(m[2]);if(m[3]){const ap=m[3].toUpperCase();if(ap==='PM'&&h<12)h+=12;if(ap==='AM'&&h===12)h=0}return timeFromStart(h,min,dateStr)}
+function timeFromStart(h,m,dateStr){const slots=daySlots(dateStr);const minutes=h*60+m;let best=slots.find(slot=>{const start=slot.split(' – ')[0],mm=start.match(/(\d{1,2}):(\d{2}) (AM|PM)/);let sh=Number(mm[1])%12+(mm[3]==='PM'?12:0);return sh*60+Number(mm[2])===minutes});if(best)return best;return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`}
+document.getElementById('importGamesBtn').onclick=()=>{if(!importRows.length)return;const maps={};mapFields.forEach(([k])=>maps[k]=document.getElementById('map_'+k).value);if(!maps.date||!maps.time||!maps.field){alert('Map at least Game Date, Game Time, and Field.');return}let added=0,skipped=0;importRows.forEach((row,i)=>{const date=excelDateToISO(row[maps.date]);const field=normalizeField(row[maps.field]);const time=normalizeTime(row[maps.time],date);if(!date||!resources.some(r=>r.name===field)||!time){skipped++;return}const home=maps.home?String(row[maps.home]||'').trim():'',away=maps.away?String(row[maps.away]||'').trim():'',div=maps.division?String(row[maps.division]||'').trim():'';const title=[div,home&&away?`${home} vs ${away}`:(home||away||'Game')].filter(Boolean).join(': ');const dupe=importedGames.some(g=>g.date===date&&g.time===time&&g.resource===field&&g.title===title);if(dupe){skipped++;return}importedGames.push({id:'imp'+Date.now()+'_'+i,resource:field,date,title,time,kind:'game',source:'SportsConnect import'});added++});save();renderSchedule();renderTables();document.getElementById('importStatus').textContent=`Import complete: ${added} games added, ${skipped} rows skipped/duplicates.`;alert(`Imported ${added} games. ${skipped} rows were skipped or duplicates.`)};
+document.getElementById('clearImportBtn').onclick=()=>{importRows=[];importHeaders=[];document.getElementById('scheduleFile').value='';document.getElementById('importStatus').textContent='No file selected.';document.getElementById('mappingArea').classList.add('hidden');document.getElementById('previewArea').classList.add('hidden')};
+
+populateTime(iso(weekStart));renderSchedule();renderTables();
+</script>
+</body>
+</html>
